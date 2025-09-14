@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>🎂 Birthday Reminder</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: linear-gradient(135deg, #2c3e50, #4ca1af);
+      color: #fff;
+    }
+    header {
+      margin: 20px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-toggle {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1.4rem;
+    }
+    .weekly-box {
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.3);
+      padding: 12px;
+      margin: 10px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      background: hotpink;
+      color: white;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    button:hover { transform: scale(1.05); }
+    .card-container {
+      display: none;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      width: 90%;
+      max-width: 900px;
+    }
+    .card {
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.3);
+      padding: 15px;
+      border-radius: 15px;
+      min-width: 200px;
+      text-align: center;
+      position: relative;
+      flex: 1 1 calc(45% - 20px);
+      max-width: 260px;
+    }
+    .card button {
+      background: transparent;
+      color: inherit;
+      font-size: 1rem;
+      margin: 0 5px;
+    }
+    .calendar-container {
+      display: none;
+      width: 95%;
+      max-width: 650px;
+      text-align: center;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      background: rgba(255,255,255,0.3);
+      padding: 10px;
+      border-radius: 12px;
+    }
+    .calendar-nav {
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .calendar-nav:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    #calendarTitle {
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .weekday {
+      font-weight: bold;
+      padding: 6px;
+    }
+    .day {
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .day.has-birthday { background: lightgreen; }
+    .day.today { border: 2px solid red; }
+    .day:hover { background: rgba(255,255,255,0.5); }
+    .popup {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 300px;
+      width: 90%;
+      position: relative;
+    }
+    .popup-content.dark {
+      background: #2c3e50;
+      color: white;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .add-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: hotpink;
+      color: white;
+      font-size: 2rem;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .form-card {
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      width: 260px;
+      z-index: 10;
+    }
+    .form-card input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    @media(max-width:600px){
+      .card { flex: 1 1 100%; }
+      button { font-size: 0.8rem; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    🎂 Birthday Reminder 
+    <button class="theme-toggle">🌙</button>
+  </header>
+
+  <div class="weekly-box" id="weeklyBox">Loading weekly birthdays...</div>
+
+  <div class="view-toggle">
+    <button onclick="showView('cards')">Card View</button>
+    <button onclick="showView('calendar')">Calendar View</button>
+  </div>
+
+  <!-- Card View -->
+  <div class="card-container" id="cardContainer"></div>
+
+  <!-- Calendar View -->
+  <div class="calendar-container" id="calendarContainer">
+    <div class="calendar-header">
+      <button class="calendar-nav" onclick="prevMonth()">⬅</button>
+      <h2 id="calendarTitle" onclick="changeYear()"></h2>
+      <button class="calendar-nav" onclick="nextMonth()">➡</button>
+    </div>
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <!-- Popup -->
+  <div class="popup" id="popup">
+    <div class="popup-content" id="popupContent">
+      <span class="close-btn" onclick="closePopup()">✖</span>
+      <div id="popupText"></div>
+    </div>
+  </div>
+
+  <!-- Add floating button -->
+  <button class="add-btn" onclick="toggleForm()">＋</button>
+
+  <!-- Form card -->
+  <div class="form-card" id="formCard">
+    <input type="text" id="nameInput" placeholder="Name">
+    <input type="date" id="dobInput">
+    <button onclick="addBirthday()">Add</button>
+  </div>
+
+  <script>
+    let birthdays = JSON.parse(localStorage.getItem("birthdays")) || [];
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    function save() {
+      localStorage.setItem("birthdays", JSON.stringify(birthdays));
+      render();
+    }
+    function addBirthday() {
+      const name = document.getElementById("nameInput").value;
+      const dob = document.getElementById("dobInput").value;
+      if(!name || !dob) return;
+      birthdays.push({ name, dob });
+      document.getElementById("nameInput").value="";
+      document.getElementById("dobInput").value="";
+      toggleForm();
+      save();
+    }
+    function deleteBirthday(index) {
+      birthdays.splice(index,1);
+      save();
+    }
+    function editBirthday(index) {
+      const newName = prompt("Edit name", birthdays[index].name);
+      const newDob = prompt("Edit DOB (yyyy-mm-dd)", birthdays[index].dob);
+      if(newName && newDob){
+        birthdays[index] = { name: newName, dob: newDob };
+        save();
+      }
+    }
+    function getAge(dob){
+      const birthDate = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      if(today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())) age--;
+      return age;
+    }
+    function renderCards(){
+      const container = document.getElementById("cardContainer");
+      container.innerHTML="";
+      birthdays.forEach((b,i)=>{
+        const card=document.createElement("div");
+        card.className="card";
+        const dob=new Date(b.dob);
+        card.innerHTML=`<h3>${b.name}</h3>
+          <p>${dob.toDateString()}</p>
+          <p>Turns ${getAge(b.dob)} this year</p>
+          <button onclick="editBirthday(${i})">✏️</button>
+          <button onclick="deleteBirthday(${i})">🗑️</button>`;
+        container.appendChild(card);
+      });
+    }
+    function renderCalendar(){
+      const calendar=document.getElementById("calendar");
+      const title=document.getElementById("calendarTitle");
+      calendar.innerHTML="";
+      title.textContent=new Date(currentYear,currentMonth).toLocaleString('default',{month:'long',year:'numeric'});
+      const weekdays=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      weekdays.forEach(day=>{
+        const wd=document.createElement("div");
+        wd.textContent=day;
+        wd.className="weekday";
+        calendar.appendChild(wd);
+      });
+      const firstDay=new Date(currentYear,currentMonth,1).getDay();
+      const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+      for(let i=0;i<firstDay;i++){
+        calendar.appendChild(document.createElement("div"));
+      }
+      for(let d=1;d<=daysInMonth;d++){
+        const day=document.createElement("div");
+        day.className="day";
+        day.textContent=d;
+        if(currentYear===new Date().getFullYear() && currentMonth===new Date().getMonth() && d===new Date().getDate()){
+          day.classList.add("today");
+        }
+        const todaysBirthdays=birthdays.filter(b=>{
+          const bd=new Date(b.dob);
+          return bd.getDate()===d && bd.getMonth()===currentMonth;
+        });
+        if(todaysBirthdays.length>0){
+          day.classList.add("has-birthday");
+          day.onclick=()=>showPopupMultiple(todaysBirthdays,d);
+        }
+        calendar.appendChild(day);
+      }
+    }
+    function showPopupMultiple(birthdayList,day){
+      const popup=document.getElementById("popup");
+      const text=document.getElementById("popupText");
+      text.innerHTML=birthdayList.map(b=>{
+        const dob=new Date(b.dob);
+        return `<h3>${b.name}</h3>
+          <p>${day} ${dob.toLocaleString('default',{month:'long'})}</p>
+          <p>Turns ${getAge(b.dob)} this year</p>`;
+      }).join("<hr>");
+      popup.style.display="flex";
+    }
+    function closePopup(){ document.getElementById("popup").style.display="none"; }
+    function toggleForm(){
+      const form=document.getElementById("formCard");
+      form.style.display=form.style.display==="block"?"none":"block";
+    }
+    function showView(view){
+      document.getElementById("cardContainer").style.display=view==="cards"?"flex":"none";
+      document.getElementById("calendarContainer").style.display=view==="calendar"?"block":"none";
+    }
+    function updateWeeklyBox(){
+      const box=document.getElementById("weeklyBox");
+      const today=new Date();
+      const upcoming=birthdays.filter(b=>{
+        const dob=new Date(b.dob);
+        const next=new Date(today.getFullYear(),dob.getMonth(),dob.getDate());
+        if(next<today) next.setFullYear(today.getFullYear()+1);
+        const diff=(next-today)/(1000*60*60*24);
+        return diff<=7;
+      });
+      if(upcoming.length===0){
+        box.textContent="🎉 No birthdays this week!";
+      } else {
+        box.innerHTML=upcoming.map(b=>{
+          const dob=new Date(b.dob);
+          const next=new Date(today.getFullYear(),dob.getMonth(),dob.getDate());
+          const age=next.getFullYear()-dob.getFullYear();
+          return `<p>${b.name} 🎂 on ${dob.toLocaleString('default',{month:'short'})} ${dob.getDate()} (turns ${age})</p>`;
+        }).join("");
+      }
+    }
+    function prevMonth(){
+      currentMonth--;
+      if(currentMonth<0){ currentMonth=11; currentYear--; }
+      renderCalendar();
+    }
+    function nextMonth(){
+      currentMonth++;
+      if(currentMonth>11){ currentMonth=0; currentYear++; }
+      renderCalendar();
+    }
+    function changeYear(){
+      const newYear=prompt("Enter year:",currentYear);
+      if(newYear && !isNaN(newYear)){
+        currentYear=parseInt(newYear);
+        renderCalendar();
+      }
+    }
+    document.querySelector(".theme-toggle").onclick=()=>{
+      document.body.classList.toggle("dark");
+      document.getElementById("popupContent").classList.toggle("dark");
+    };
+    function render(){
+      renderCards();
+      renderCalendar();
+      updateWeeklyBox();
+    }
+    render();
+    showView("cards");
+  </script>
+</body>
+</html>
